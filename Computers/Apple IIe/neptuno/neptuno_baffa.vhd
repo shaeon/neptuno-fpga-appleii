@@ -82,7 +82,7 @@ entity neptuno_baffa is
         sram_we_n_o         : out   std_logic                               := '1';
         sram_oe_n_o         : out   std_logic                               := '1';
 		  sram_ub_n_o         : out   std_logic                               := '1';
-        sram_lb_n_o         : out   std_logic                               := '1';
+        sram_lb_n_o         : out   std_logic                               := '0';
 
         -- PS2
         ps2_clk_io          : inout std_logic                               := 'Z';
