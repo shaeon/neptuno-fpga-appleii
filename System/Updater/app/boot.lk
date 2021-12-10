@@ -1,0 +1,13 @@
+-mjwx
+-i boot.ihx
+-b _CODE = 0x6010
+-b _DATA = 0x0000
+-k f:\SDCC\bin\..\lib\z80
+-l z80
+obj/crt0.rel
+obj/boot.rel
+obj/vdp.rel
+obj/diskio.rel
+obj/ffro.rel
+
+-e

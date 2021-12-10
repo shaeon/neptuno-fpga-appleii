@@ -1,0 +1,388 @@
+--
+-- Multicore 2 / Multicore 2+
+--
+-- Copyright (c) 2017-2020 - Victor Trucco
+--
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS CODE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+-- You are responsible for any legal issues arising from your use of this code.
+--
+		
+--
+--
+-- STM 32 UPDATER
+-- Victor Trucco - 2015
+--
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
+
+entity top is
+port 
+(
+        -- Clocks
+        clock_50_i         : in    std_logic;
+
+        -- Buttons
+        btn_n_i            : in    std_logic_vector(4 downto 1);
+
+        -- SRAM
+        sram_addr_o        : out   std_logic_vector(20 downto 0)   := (others => '0');
+        sram_data_io       : inout std_logic_vector(7 downto 0)    := (others => 'Z');
+        sram_we_n_o        : out   std_logic                               := '1';
+        sram_oe_n_o        : out   std_logic                               := '1';
+
+        -- SDRAM
+        SDRAM_A            : out std_logic_vector(12 downto 0);
+        SDRAM_DQ           : inout std_logic_vector(15 downto 0);
+
+        SDRAM_BA           : out std_logic_vector(1 downto 0);
+        SDRAM_DQMH         : out std_logic;
+        SDRAM_DQML         : out std_logic;    
+
+        SDRAM_nRAS         : out std_logic;
+        SDRAM_nCAS         : out std_logic;
+        SDRAM_CKE          : out std_logic;
+        SDRAM_CLK          : out std_logic;
+        SDRAM_nCS          : out std_logic;
+        SDRAM_nWE          : out std_logic;
+    
+        -- PS2
+        ps2_clk_io         : inout std_logic                        := 'Z';
+        ps2_data_io        : inout std_logic                        := 'Z';
+        ps2_mouse_clk_io   : inout std_logic                        := 'Z';
+        ps2_mouse_data_io  : inout std_logic                        := 'Z';
+
+        -- SD Card
+        sd_cs_n_o          : out   std_logic                        := 'Z';
+        sd_sclk_o          : out   std_logic                        := 'Z';
+        sd_mosi_o          : out   std_logic                        := 'Z';
+        sd_miso_i          : in    std_logic;
+
+        -- Joysticks
+        joy_clock_o        : out   std_logic;
+        joy_load_o         : out   std_logic;
+        joy_data_i         : in    std_logic;
+        joy_p7_o           : out   std_logic                        := '1';
+
+        -- Audio
+        AUDIO_L             : out   std_logic                       := '0';
+        AUDIO_R             : out   std_logic                       := '0';
+        ear_i               : in    std_logic;
+        mic_o               : out   std_logic                       := '0';
+
+        -- VGA
+        VGA_R               : out   std_logic_vector(4 downto 0)    := (others => '0');
+        VGA_G               : out   std_logic_vector(4 downto 0)    := (others => '0');
+        VGA_B               : out   std_logic_vector(4 downto 0)    := (others => '0');
+        VGA_HS              : out   std_logic                       := '1';
+        VGA_VS              : out   std_logic                       := '1';
+
+        LED                 : out   std_logic                       := '1';-- 0 is led on
+
+        --STM32
+        stm_rx_o            : out std_logic     := 'Z'; -- stm RX pin, so, is OUT on the slave
+        stm_tx_i            : in  std_logic     := 'Z'; -- stm TX pin, so, is IN on the slave
+        stm_rst_o           : out std_logic     := 'Z'; -- '0' to hold the microcontroller reset line, to free the SD card
+        
+        SPI_SCK             : in  std_logic;
+        SPI_DO              : out std_logic   := 'Z';
+        SPI_DI              : in  std_logic;
+        SPI_SS2             : in  std_logic;
+        SPI_nWAIT           : out std_logic   := '1';
+
+        GPIO                : inout std_logic_vector(31 downto 0)   := (others => 'Z')
+    );
+end entity;
+
+architecture Behavior of top is
+
+    -- ASMI (Altera specific component)
+    component cyclone_asmiblock
+    port (
+        dclkin      : in    std_logic;      -- DCLK
+        scein       : in    std_logic;      -- nCSO
+        sdoin       : in    std_logic;      -- ASDO
+        oe          : in    std_logic;      --(1=disable(Hi-Z))
+        data0out    : out   std_logic       -- DATA0
+    );
+    end component;
+
+    -- Reset signal
+    signal reset_n              : std_logic;        -- Reset geral
+    
+    -- Master clock
+    signal pll_reset            : std_logic;        -- Reset do PLL
+    signal pll_locked           : std_logic;        -- PLL travado quando 1
+    
+    -- Master clock
+    signal clk_28       : std_logic;
+    signal memory_clock     : std_logic;
+    signal vid_clk: std_logic := '0';
+    signal sysclk : std_logic := '0';
+    signal atari_clk: std_logic;
+
+    
+    signal ram_a                : std_logic_vector(18 downto 0);        -- 512K
+    signal ram_din              : std_logic_vector(15 downto 0);
+    signal ram_dout             : std_logic_vector(15 downto 0);
+    signal ram_cs               : std_logic;
+    signal ram_oe               : std_logic;
+    signal ram_we               : std_logic;
+    signal rom_a                : std_logic_vector(13 downto 0);        -- 16K
+    signal rom_dout         : std_logic_vector(7 downto 0);
+    
+    signal from_sram            : std_logic_vector(15 downto 0);
+    signal to_sram          : std_logic_vector(15 downto 0);
+    
+        -- ram
+    signal loader_ram_a             : std_logic_vector(18 downto 0);        -- 512K
+    signal loader_to_sram           : std_logic_vector(15 downto 0);
+    signal loader_from_sram         : std_logic_vector(15 downto 0);
+    signal loader_ram_data          : std_logic_vector(15 downto 0);
+    signal loader_ram_cs                : std_logic;
+    signal loader_ram_oe                : std_logic;
+    signal loader_ram_we                : std_logic;
+
+    signal a2601_ram_a              : std_logic_vector(13 downto 0);    
+    signal a2601_ram_dout           : std_logic_vector(7 downto 0);
+    
+    signal port_243b : std_logic_vector(7 downto 0);
+
+    -- EPCS
+    signal spi_mosi_s           : std_logic;
+    signal spi_sclk_s           : std_logic;
+    signal flash_miso_s     : std_logic;
+    signal flash_cs_n_s     : std_logic;
+    signal spi_cs_n         : std_logic         := '1';
+    
+    
+    --rgb
+    signal rgb_loader_out           : std_logic_vector(7 downto 0);
+    signal rgb_atari_out                : std_logic_vector(7 downto 0);
+    
+    signal hsync_loader_out         : std_logic;
+    signal vsync_loader_out         : std_logic;
+    
+    signal hsync_atari_out          : std_logic;
+    signal vsync_atari_out          : std_logic;
+    
+    signal bs_method                    : std_logic_vector(7 downto 0);
+    
+    -- PS/2
+    signal keyb_data_s          : std_logic_vector(7 downto 0);
+    signal keyb_valid_s             : std_logic;
+    signal clk_keyb : std_logic;
+    
+    signal joy_l_s          : std_logic;
+    signal joy_r_s          : std_logic;
+    
+    -- HDMI
+    
+    signal clk_pixel, clk_pixel_shift: std_logic;
+        signal vga_hsync_n_s        : std_logic;
+    signal vga_vsync_n_s        : std_logic;
+    signal vga_blank_s      : std_logic;
+    signal sound_hdmi_s     : std_logic_vector(15 downto 0);
+    signal tdms_s               : std_logic_vector( 7 downto 0);
+        signal vga_col_s            : std_logic_vector( 3 downto 0);
+        
+        signal loader_hor_s: std_logic_vector( 8 downto 0);
+        signal loader_ver_s: std_logic_vector( 8 downto 0);
+        signal cnt_hor_s                : std_logic_vector(8 downto 0);
+    signal cnt_ver_s                : std_logic_vector(8 downto 0);
+    
+    -- HDMI
+    signal tdms_r_s         : std_logic_vector( 9 downto 0);
+    signal tdms_g_s         : std_logic_vector( 9 downto 0);
+    signal tdms_b_s         : std_logic_vector( 9 downto 0);
+    signal hdmi_p_s         : std_logic_vector( 3 downto 0);
+    signal hdmi_n_s         : std_logic_vector( 3 downto 0);
+    
+    signal port303b_s       : std_logic := '0';
+
+    signal clk_video        : std_logic;
+      
+        
+begin
+
+    SDRAM_nCS <= '1';
+
+
+    ps2 : work.ps2_intf port map 
+    (
+        clk_video,
+        reset_n,
+        ps2_clk_io,
+        ps2_data_io,
+        keyb_data_s,
+        keyb_valid_s,
+        open
+    );
+    
+    clk_keyb <= clk_pixel;-- when A2601_reset = '1' else vid_clk;
+
+    -- 28 MHz master clock
+    pll: work.pll1 port map (
+        areset      => pll_reset,               -- PLL Reset
+        inclk0      => clock_50_i,              -- Clock 50 MHz externo
+        c0              => clk_28,  
+        c1              => clk_pixel,               --  25 MHz        
+        locked      => pll_locked               -- Sinal de travamento (1 = PLL travado e pronto)
+    );
+    
+    pll_reset   <= '1' when btn_n_i(1) = '0' else '0';
+    reset_n     <= not (pll_reset or not pll_locked);   -- System is reset by external reset switch or PLL being out of lock
+    
+    loader : work.speccy48_top port map 
+    (
+        
+        clk_28      => clk_28,
+        reset_n_i   => reset_n,
+    
+        VGA_R(3 downto 1) => rgb_loader_out (7 downto 5),    
+        VGA_G(3 downto 1) => rgb_loader_out (4 downto 2),    
+        VGA_B(3 downto 2) => rgb_loader_out (1 downto 0),   
+        VGA_HS          => hsync_loader_out,  
+        VGA_VS          => vsync_loader_out,   
+        --VGA_BLANK         => blank_ula_s,
+
+        -- PS/2 Keyboar   -- PS/2 Ke
+        keyb_data      => keyb_data_s, 
+        keyb_valid     => keyb_valid_s,   
+   
+        SRAM_ADDR      => loader_ram_a,
+        FROM_SRAM      => loader_from_sram,
+        TO_SRAM         => loader_to_sram,
+        SRAM_CE_N      => loader_ram_cs,
+        SRAM_OE_N      => loader_ram_oe,
+        SRAM_WE_N      => loader_ram_we ,
+                          
+        SD_nCS         => sd_cs_n_o,
+        SD_MOSI        => spi_mosi_s, 
+        SD_SCLK        => spi_sclk_s, 
+        SD_MISO        => sd_miso_i,
+        oFlash_cs_n     => flash_cs_n_s,
+        iFlash_miso     => flash_miso_s,
+        
+        PORT_243B       => port_243b,
+        
+        joystick       => (others=>'0'),--"000" & not joy1_p6_i &  not joy1_up_i &  not joy1_down_i & not joy1_left_i & not joy1_right_i,
+        
+        cnt_h_o      => loader_hor_s,
+        cnt_v_o      => loader_ver_s,
+        
+        iRS232_rx   => stm_tx_i,
+        oRS232_tx   => stm_rx_o,
+        
+        port303b_o  => port303b_s,
+
+        clk_video_o   => clk_video
+        
+    );
+    
+
+
+    sd_mosi_o   <= spi_mosi_s;
+    sd_sclk_o   <= spi_sclk_s;
+    
+    
+    stm_rst_o <= '0' when port303b_s = '1' or btn_n_i(4) = '0'else 'Z';
+    
+    sram_addr_o   <= "00"&loader_ram_a;
+    sram_data_io  <= loader_to_sram(7 downto 0) when loader_ram_we = '0' else (others=>'Z');
+    loader_from_sram(7 downto 0)      <= sram_data_io;
+    sram_oe_n_o   <= loader_ram_oe;
+    sram_we_n_o   <= loader_ram_we;
+
+ --   sram_oe_n_o   <= '1'; 
+ --   sram_we_n_o   <= '1'; 
+--
+--  GENERIC
+--  (
+--      init_file           : string := "";
+--      widthad_a           : natural;
+--      width_a             : natural := 8;
+ --   outdata_reg_a : string := "UNREGISTERED"
+--  );
+--  PORT
+--  (
+--      address     : IN STD_LOGIC_VECTOR (widthad_a-1 DOWNTO 0);
+--      clock       : IN STD_LOGIC ;
+--      data        : IN STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
+--      wren        : IN STD_LOGIC ;
+--      q       : OUT STD_LOGIC_VECTOR (width_a-1 DOWNTO 0)
+--  );
+
+    
+    -- VGA framebuffer
+    vga: entity work.vga
+    port map (
+        I_CLK       => clk_video,
+        I_CLK_VGA   => clk_pixel,
+        I_COLOR     => "0" & rgb_loader_out(7)& rgb_loader_out(4)& rgb_loader_out(1),
+        I_HCNT      => loader_hor_s,
+        I_VCNT      => loader_ver_s,
+        O_HSYNC     => vga_hsync_n_s,
+        O_VSYNC     => vga_vsync_n_s,
+        O_COLOR     => vga_col_s,
+        O_HCNT      => open,
+        O_VCNT      => open,
+        O_H         => open,
+        O_BLANK     => vga_blank_s
+    );
+   
+        
+        VGA_R   <= vga_col_s(2) & vga_col_s(2) & vga_col_s(2) & vga_col_s(2) & '0';
+        VGA_G   <= vga_col_s(1) & vga_col_s(1) & vga_col_s(1) & vga_col_s(1) & '0';
+        VGA_B   <= vga_col_s(0) & vga_col_s(0) & vga_col_s(0) & vga_col_s(0) & '0';
+        VGA_HS  <= vga_hsync_n_s;
+        VGA_VS  <= vga_vsync_n_s;
+        
+
+        
+--------------------------------------------------
+
+    -- EPCS4
+    epcs4: cyclone_asmiblock
+    port map 
+    (
+        oe          => '0',
+        scein       => flash_cs_n_s,
+        dclkin      => spi_sclk_s,
+        sdoin       => spi_mosi_s,
+        data0out    => flash_miso_s
+    );
+
+        
+
+    
+end architecture;

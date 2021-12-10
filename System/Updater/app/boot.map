@@ -1,0 +1,229 @@
+ASxxxx Linker V03.00 + NoICE + sdld,  page 1.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+.  .ABS.                            00000000    00000000 =           0. bytes (ABS,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     00000000  .__.ABS.                           
+     00000000  l__BSEG                         
+     00000000  l__BSS                          
+     00000000  l__CABS                         
+     00000000  l__DABS                         
+     00000000  l__HEADER                       
+     00000000  l__HEAP                         
+     00000000  s__CABS                         
+     00000000  s__DABS                         
+     00000000  s__HEADER                       
+     00000000  s__HEADER0                      
+     00000001  l__GSFINAL                      
+     0000000D  l__HEADER0                      
+     0000000F  l__GSINIT                       
+     0000001F  l__INITIALIZED                  
+     0000001F  l__INITIALIZER                  
+     00000200  l__HOME                         
+     000007CA  l__DATA                         
+     00004EC1  l__CODE                         
+     00006010  s__CODE                         
+     0000AED1  s__HOME                         
+     0000B0D1  s__INITIALIZER                  
+     0000B0F0  s__GSINIT                       
+     0000B0FF  s__GSFINAL                      
+     0000B100  s__DATA                         
+     0000B8CA  s__INITIALIZED                  
+     0000B8E9  s__BSEG                         
+     0000B8E9  s__BSS                          
+     0000B8E9  s__HEAP                         
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 2.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_CODE                               00006010    00004EC1 =       20161. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     00006010  _exit                              crt0
+     00006013  _display_error                     boot
+     00006084  _TITLE                             boot
+     000060A5  _error_loading                     boot
+     000060C6  _prints_help                       boot
+     00006292  _load_and_start                    boot
+     00006460  _get_fattime                       boot
+     00006467  _main                              boot
+     00006648  _vdp_init                          vdp
+     00006685  _font                              vdp
+     00006985  _vdp_setcolor                      vdp
+     000069B6  _vdp_setborder                     vdp
+     000069C0  _vdp_setflash                      vdp
+     000069D3  _vdp_setfg                         vdp
+     000069F1  _vdp_setbg                         vdp
+     000069FC  _vdp_cls                           vdp
+     00006A3E  _vdp_gotoxy                        vdp
+     00006A5F  _vdp_gotox                         vdp
+     00006A6A  _vdp_putchar                       vdp
+     00006BEE  _vdp_prints                        vdp
+     00006C01  _puthex                            vdp
+     00006C4D  _puthex8                           vdp
+     00006C5F  _puthex16                          vdp
+     00006C6E  _xmit_mmc                          diskio
+     00006C83  _rcvr_mmc                          diskio
+     00006F91  _disk_status                       diskio
+     00006FA4  _disk_initialize                   diskio
+     0000713B  _disk_read                         diskio
+     00007241  _disk_write                        diskio
+     0000736E  _disk_ioctl                        diskio
+     000098B2  _f_mount                           ffro
+     000099B2  _f_open                            ffro
+     00009B9F  _f_read                            ffro
+     0000A1CB  _f_close                           ffro
+     0000A1EF  _f_gets                            ffro
+     0000A2F0  _vsprintf                          sprintf
+     0000A325  _sprintf                           sprintf
+     0000A35A  _strcat                            _strcat
+     0000A385  _strlen                            
+     0000A497  __print_format                     printf_large
+     0000AEB6  __mulint                           
+     0000AEBC  __mul16                            
+     0000AED0  ___sdcc_call_hl                    
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 3.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_HEADER0                            00000000    0000000D =          13. bytes (ABS,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+ASxxxx Linker V03.00 + NoICE + sdld,  page 4.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_HOME                               0000AED1    00000200 =         512. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     0000AED1  __divulong                         _divulong
+     0000AF4F  __mullong                          _mullong
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 5.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_INITIALIZER                        0000B0D1    0000001F =          31. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+ASxxxx Linker V03.00 + NoICE + sdld,  page 6.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_GSINIT                             0000B0F0    0000000F =          15. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     0000B0F0  gsinit                             crt0
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 7.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_GSFINAL                            0000B0FF    00000001 =           1. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+ASxxxx Linker V03.00 + NoICE + sdld,  page 8.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_DATA                               0000B100    000007CA =        1994. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     0000B100  _FatFs                             boot
+     0000B32F  _Fil                               boot
+     0000B351  _Fil2                              boot
+     0000B373  _res                               boot
+     0000B374  _t                                 boot
+     0000B8B6  _cx                                vdp
+     0000B8B7  _cy                                vdp
+     0000B8B8  __flash                            vdp
+     0000B8B9  __bright                           vdp
+     0000B8BA  _fg                                vdp
+     0000B8BB  _bg                                vdp
+     0000B8BC  _faddr                             vdp
+     0000B8BE  _vaddr                             vdp
+     0000B8C0  _caddr                             vdp
+     0000B8C2  _vpdc                              vdp
+     0000B8C3  _vpdf                              vdp
+     0000B8C4  _vpdv                              vdp
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 9.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_INITIALIZED                        0000B8CA    0000001F =          31. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     0000B8CA  _version                           boot
+     0000B8CC  _scandoubler                       boot
+     0000B8CD  _freq5060                          boot
+     0000B8CE  _timex                             boot
+     0000B8CF  _psgmode                           boot
+     0000B8D0  _divmmc                            boot
+     0000B8D1  _mf                                boot
+     0000B8D2  _joystick1                         boot
+     0000B8D3  _joystick2                         boot
+     0000B8D4  _ps2                               boot
+     0000B8D5  _lightpen                          boot
+     0000B8D6  _scanlines                         boot
+     0000B8D7  _menu_default                      boot
+     0000B8D8  _menu_cont                         boot
+     0000B8D9  _config_changed                    boot
+     0000B8DA  _dac                               boot
+     0000B8DB  _ena_turbo                         boot
+     0000B8DC  _turbosound                        boot
+     0000B8DD  _covox                             boot
+     0000B8DE  _intsnd                            boot
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 10.
+
+Files Linked                              [ module(s) ]
+
+obj/crt0.rel                              [ crt0 ]
+obj/boot.rel                              [ boot ]
+obj/vdp.rel                               [ vdp ]
+obj/diskio.rel                            [ diskio ]
+obj/ffro.rel                              [ ffro ]
+
+
+Libraries Linked                          [ object file ]
+
+f:\SDCC\bin\..\lib\z80/z80.lib            [ sprintf.rel ]
+f:\SDCC\bin\..\lib\z80/z80.lib            [ _divulong.rel ]
+f:\SDCC\bin\..\lib\z80/z80.lib            [ _strcat.rel ]
+f:\SDCC\bin\..\lib\z80/z80.lib            [ strlen.rel ]
+f:\SDCC\bin\..\lib\z80/z80.lib            [ _mullong.rel ]
+f:\SDCC\bin\..\lib\z80/z80.lib            [ printf_large.rel ]
+f:\SDCC\bin\..\lib\z80/z80.lib            [ mul.rel ]
+f:\SDCC\bin\..\lib\z80/z80.lib            [ __sdcc_call_hl.rel ]
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 11.
+
+User Base Address Definitions
+
+_CODE = 0x6010
+_DATA = 0x0000
+
+
